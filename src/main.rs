@@ -1,78 +1,49 @@
-use flo_draw::canvas::*;
-use flo_draw::*;
+extern crate piston_window;
 
-use std::thread;
-use std::time::Duration;
+use piston_window::*;
 
-//use flo_canvas::*;
-
-struct Car {
-    col: Color,
-    width: f64,
-    length: f64,
-    x: f64,
-    y: f64,
-
-    vel: f64,
-    acc: f64,
-}
-
-impl Car {
-    pub fn new_car(col: Color, x: f64, y: f64) -> Car {
-        Car {
-            col: col,
-            width: 50.0,
-            length: 100.0,
-            x: x,
-            y: y,
-            vel: -15.0,
-            acc: 0.2,
-        }
-    }
-
-    pub fn update(&mut self) {
-        self.y += self.vel;
-        self.vel += self.acc;
-    }
-}
+use traffic::Car;
+use traffic::RunTime;
+use traffic::Sim;
 
 fn main() {
-    with_2d_graphics(|| {
-        let mut cars = [
-            // Create new cars
-            Car::new_car(Color::Rgba(1.0, 0.0, 0.0, 1.0), 0.0, 100.0),
-            Car::new_car(Color::Rgba(0.0, 0.0, 1.0, 1.0), 100.0, 150.0),
-            Car::new_car(Color::Rgba(0.0, 1.0, 0.0, 1.0), 200.0, 200.0),
-            Car::new_car(Color::Rgba(1.0, 1.0, 1.0, 1.0), 300.0, 250.0),
-            Car::new_car(Color::Rgba(0.2, 0.2, 0.2, 1.0), 400.0, 300.0),
-            Car::new_car(Color::Rgba(1.0, 1.0, 0.0, 1.0), 500.0, 350.0),
-            Car::new_car(Color::Rgba(0.5, 0.0, 1.0, 1.0), 600.0, 400.0),
-            Car::new_car(Color::Rgba(1.0, 0.5, 0.0, 1.0), 700.0, 450.0),
-        ];
-        let canvas = create_canvas_window("Hello World");
+    let mut window: PistonWindow = WindowSettings::new("Traffic Simulator", [400, 400])
+        .exit_on_esc(true)
+        .build()
+        .unwrap();
 
-        loop {
-            for car in cars.iter_mut() {
-                car.update(); // Move cars
+    let mut sim = Sim::new();
+    sim.add_car(Car::new(0.0, 0.0));
+    let mut runtime = RunTime::new(120.0);
+    while let Some(e) = window.next() {
+        sim.render(&mut window, &e, &mut runtime);
+    }
+
+    /* println!("running");
+
+    let mut window: PistonWindow = WindowSettings::new("Traffic Simulator", [400, 400])
+    .exit_on_esc(true)
+        .graphics_api(opengl)
+        .build()
+        .unwrap();
+
+    let mut car = Car::new(0.0, 200.0);
+
+    while let Some(e) = window.next() {
+        if let Some(button) = e.press_args() {
+            let mult: f64 = 10.0;
+
+            if button == Keyboard(Key::R) {
+                car.y = 200.0;
             }
-
-            canvas.draw(|gc| {
-                gc.clear_canvas(Color::Rgba(0.0, 0.0, 0.0, 1.0)); // yercdhuybkgjtgre897n5rdgry87uhi nfodrety7b8 hedg8ny7ut4rfgdt8ug49rt
-                gc.canvas_height(1000.0); // mkofbcg09u8jfthrui8ktrgf8oi7ytvrcfkbyufrvutg7498ert 5gr9e8rtf489edrytu84r4ty748r6t7y87y77777777777777777777
-                gc.center_region(0.0, 0.0, 1000.0, 1000.0); // mklopkkjjjjjjnb7fgt
-
-                for car in cars.iter() {
-                    gc.rect(
-                        (car.x - car.width / 2.0) as f32,
-                        (car.y - car.length / 2.0) as f32,
-                        (car.x + car.width / 2.0) as f32,
-                        (car.y + car.length / 2.0) as f32,
-                    );
-                    gc.fill_color(car.col);
-                    gc.fill();
-                }
-            });
-            thread::sleep(Duration::from_nanos(1_000_000_000 / 60));
         }
-    });
+        window.draw_2d(&e, |c, g, _| {
+            clear(color::BLACK, g);
+            let c = c.trans(200.0, 200.0);
+            let rect = car.rect();
+            rectangle(color::RED, rect, c.transform, g);
+            car.step();
+            std::thread::sleep(time::Duration::from_millis(1000 / 60));
+        });
+    } */
 }
