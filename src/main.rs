@@ -11,7 +11,7 @@ fn main() {
         .exit_on_esc(true)
         .build()
         .unwrap();
-
+    window.set_bench_mode(true);
     let mut sim = Sim::new();
     sim.add_car(Car::new(0.0, 0.0));
     let mut runtime = RunTime::new(120.0);
