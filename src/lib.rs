@@ -1,11 +1,11 @@
+extern crate fps_counter;
 extern crate piston_window;
 
+use fps_counter::*;
 use piston_window::Button::Keyboard;
 use piston_window::*;
 use std::time::{Duration, Instant};
 use std::{thread, time};
-
-const DELTA: f64 = 1.0 / 60.0;
 
 pub struct Car {
     x: f64,
@@ -16,6 +16,7 @@ pub struct Car {
     acc: f64,
     angle: f64,
     color: [f32; 4],
+    delta: f64,
 }
 impl Car {
     pub fn new(x: f64, y: f64) -> Car {
@@ -28,6 +29,7 @@ impl Car {
             acc: -200.0,
             angle: std::f64::consts::PI / 2.0,
             color: [1.0, 0.0, 0.0, 1.0],
+            delta: 1.0 / 400.0,
         }
     }
     pub fn rect(&self) -> [f64; 4] {
@@ -39,19 +41,23 @@ impl Car {
         ]
     }
     pub fn step(&mut self) {
-        self.x += self.vel * self.angle.cos() * DELTA;
-        self.y += self.vel * self.angle.sin() * DELTA;
-        self.vel += self.acc * DELTA;
+        self.x += self.vel * self.angle.cos() * self.delta;
+        self.y += self.vel * self.angle.sin() * self.delta;
+        self.vel += self.acc * self.delta;
     }
 }
 
 pub struct Sim {
     cars: Vec<Car>,
+    fps: FPSCounter,
 }
 impl Sim {
     pub fn new() -> Sim {
         let vec: Vec<Car> = Vec::new();
-        Sim { cars: vec }
+        Sim {
+            cars: vec,
+            fps: FPSCounter::default(),
+        }
     }
     pub fn add_car(&mut self, car: Car) {
         self.cars.push(car);
@@ -67,30 +73,16 @@ impl Sim {
         e: &E,
         runtime: &mut RunTime,
     ) {
-        let assets = find_folder::Search::ParentsThenKids(3, 3)
-            .for_folder("assets")
-            .unwrap();
-        let mut glyphs = window.load_font(assets.join("Hack-Regular.ttf")).unwrap();
         window.draw_2d(e, |c, g, _| {
             clear(color::BLACK, g);
             let c = c.trans(200.0, 200.0);
             for car in &self.cars {
-                rectangle(color::RED, car.rect(), c.transform, g);
+                rectangle(car.color, car.rect(), c.transform, g);
             }
-            let transform = c.transform.trans(0.0, 0.0);
-
-            /* text::Text::new_color([1.0, 1.0, 1.0, 1.0], 32)
-                .draw(
-                    &format!("{}", runtime.fps()),
-                    &mut glyphs,
-                    &c.draw_state,
-                    transform,
-                    g,
-                )
-            .unwrap(); */
-            runtime.fps();
         });
         self.step();
+        //runtime.frame_delay();
+        println!("{} fps", self.fps.tick());
     }
 }
 
@@ -112,17 +104,21 @@ impl RunTime {
     }
     pub fn frame_delay(&mut self) {
         let now = time::Instant::now();
-        println!("{:?}", self.prev_frame.elapsed());
-        if self.prev_frame.elapsed() < self.frame_int {
-            let delay = self.frame_int - self.prev_frame.elapsed();
-            thread::sleep(delay);
+        let elapsed = self.prev_frame.elapsed();
+        let delay;
+        if elapsed < self.frame_int {
+            delay = self.frame_int - elapsed;
+        } else {
+            delay = Duration::from_secs(0)
         }
         self.prev_frame = time::Instant::now();
+        thread::sleep(delay);
     }
     pub fn fps(&mut self) -> u32 {
-        let fps = time::Duration::from_secs(1).as_nanos() / self.prev_frame.elapsed().as_nanos();
-        println!("{}", fps);
-        self.prev_frame = time::Instant::now();
+        let prev = self.prev_frame.elapsed().as_nanos();
+        // println!("{} prev", prev);
+        let fps = time::Duration::from_secs(1).as_nanos() / prev;
+        println!("{} fps", fps);
         fps as u32
     }
 }
