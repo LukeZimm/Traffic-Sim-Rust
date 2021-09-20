@@ -20,6 +20,13 @@ fn main() {
     let mut sim = Sim::new();
     let mut runtime = RunTime::new(400.0);
     while let Some(e) = window.next() {
+        if let Some(button) = e.press_args() {
+            if button == Button::Keyboard(Key::W) {
+                sim.scale_mult(1.1);
+            } else if button == Button::Keyboard(Key::S) {
+                sim.scale_mult(0.9);
+            }
+        }
         sim.render(&mut window, &e, &mut runtime);
     }
 }

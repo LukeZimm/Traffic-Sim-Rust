@@ -23,15 +23,15 @@ impl Traffic {
     pub fn add_lane(&mut self, lane: Lane) {
         self.lanes.push(lane);
     }
-    pub fn display<G>(&self, c: Context, g: &mut G)
+    pub fn display<G>(&self, c: Context, g: &mut G, scale: f64)
     where
         G: Graphics,
     {
         for lane in &self.lanes {
-            lane.display(c, g, 2.0); // buggy when less than 2.0
+            lane.display(c, g, scale); // buggy when less than 2.0
         }
         for car in &self.cars {
-            car.display(c, g);
+            car.display(c, g, scale);
         }
     }
     pub fn step(&mut self) {}

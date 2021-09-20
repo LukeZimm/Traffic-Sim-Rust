@@ -17,8 +17,8 @@ impl Car {
         Car {
             x,
             y,
-            width: 30.0,
-            length: 50.0,
+            width: 1.9,
+            length: 4.7,
             vel: 0.0,
             acc: -200.0,
             angle: std::f64::consts::PI / 2.0,
@@ -26,12 +26,12 @@ impl Car {
             delta: 1.0 / 400.0,
         }
     }
-    pub fn rect(&self) -> [f64; 4] {
+    pub fn rect(&self, scale: f64) -> [f64; 4] {
         [
-            self.x - self.width / 2.0,
-            self.y - self.length / 2.0,
-            self.width,
-            self.length,
+            (self.x - self.width / 2.0) * scale,
+            (self.y - self.length / 2.0) * scale,
+            self.width * scale,
+            self.length * scale,
         ]
     }
     pub fn step(&mut self) {
@@ -39,10 +39,10 @@ impl Car {
         self.y += self.vel * self.angle.sin() * self.delta;
         self.vel += self.acc * self.delta;
     }
-    pub fn display<G>(&self, c: Context, g: &mut G)
+    pub fn display<G>(&self, c: Context, g: &mut G, scale: f64)
     where
         G: Graphics,
     {
-        rectangle(self.color, self.rect(), c.transform, g);
+        rectangle(self.color, self.rect(scale), c.transform, g);
     }
 }

@@ -20,9 +20,16 @@ impl Lane {
     where
         G: Graphics,
     {
-        // add loop to draw lines
-        let dash_width = 0.2 * scale;
-        let dash_length = 3.08 * scale;
+        let dash_width = if (0.2 * scale) > 1.0 {
+            0.2 * scale
+        } else {
+            1.0
+        };
+        let dash_length = if (3.08 * scale) > 1.0 {
+            3.08 * scale
+        } else {
+            1.0
+        };
         let dash_gap = 8.0 * scale;
         let dashes = (self.length * scale / dash_gap).floor() as u32;
         for i in 0..dashes {
