@@ -13,7 +13,6 @@ fn main() {
         .unwrap();
     // window.set_bench_mode(true); // Uncomment to remove frame limit
     let mut sim = Sim::new();
-    sim.add_car(Car::new(0.0, 0.0));
     let mut runtime = RunTime::new(400.0);
     while let Some(e) = window.next() {
         sim.render(&mut window, &e, &mut runtime);

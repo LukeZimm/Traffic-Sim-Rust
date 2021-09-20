@@ -45,27 +45,87 @@ impl Car {
         self.y += self.vel * self.angle.sin() * self.delta;
         self.vel += self.acc * self.delta;
     }
+    pub fn display<G>(&self, c: Context, g: &mut G)
+    where
+        G: Graphics,
+    {
+        rectangle(self.color, self.rect(), c.transform, g);
+    }
+}
+
+pub struct Lane {
+    center: [f64; 2], // meters
+    width: f64,       // meters
+    direction: f64,   // radians from +x
+    length: f64,      // meters
+}
+impl Lane {
+    const LANE_WIDTH: f64 = 4.4;
+    pub fn new(x: f64, y: f64, length: f64) -> Lane {
+        Lane {
+            center: [x, y],
+            width: 4.4,
+            direction: std::f64::consts::FRAC_PI_2,
+            length,
+        }
+    }
+    pub fn display<G>(&self, c: Context, g: &mut G, scale: f64)
+    where
+        G: Graphics,
+    {
+        // add loop to draw lines
+        let dash_width = 0.2 * scale;
+        let dash_length = 3.08 * scale;
+        let dash_gap = 8.0 * scale;
+        let dashes = (self.length * scale / dash_gap).floor() as u32;
+        for i in 0..dashes {
+            rectangle(
+                color::WHITE,
+                [
+                    self.center[0] * scale - self.width / 2.0 * scale - dash_width / 2.0,
+                    self.center[1] * scale + self.length / 2.0 * scale
+                        - dash_length / 2.0
+                        - (i as f64) * dash_gap,
+                    dash_width,
+                    dash_length,
+                ],
+                c.transform,
+                g,
+            );
+            rectangle(
+                color::WHITE,
+                [
+                    self.center[0] * scale + self.width / 2.0 * scale - dash_width / 2.0,
+                    self.center[1] * scale + self.length / 2.0 * scale
+                        - dash_length / 2.0
+                        - (i as f64) * dash_gap,
+                    dash_width,
+                    dash_length,
+                ],
+                c.transform,
+                g,
+            );
+        }
+    }
 }
 
 pub struct Sim {
-    cars: Vec<Car>,
+    traffic: Traffic,
     fps: FPSCounter,
 }
 impl Sim {
     pub fn new() -> Sim {
-        let vec: Vec<Car> = Vec::new();
+        let mut traffic = Traffic::new();
+        traffic.add_car(Car::new(100.0, 0.0));
+        traffic.add_lane(Lane::new(0.0, 0.0, 500.0));
+        traffic.add_lane(Lane::new(20.0, 0.0, 500.0));
         Sim {
-            cars: vec,
+            traffic,
             fps: FPSCounter::default(),
         }
     }
-    pub fn add_car(&mut self, car: Car) {
-        self.cars.push(car);
-    }
     pub fn step(&mut self) {
-        for car in &mut self.cars {
-            car.step();
-        }
+        self.traffic.step();
     }
     pub fn render<E: GenericEvent>(
         &mut self,
@@ -76,14 +136,48 @@ impl Sim {
         window.draw_2d(e, |c, g, _| {
             clear(color::BLACK, g);
             let c = c.trans(200.0, 200.0);
-            for car in &self.cars {
+            self.traffic.display(c, g);
+            /* for car in &self.cars {
                 rectangle(car.color, car.rect(), c.transform, g);
-            }
+            } */
         });
         self.step();
         //runtime.frame_delay();
         println!("{} fps", self.fps.tick());
     }
+}
+
+pub struct Traffic {
+    cars: Vec<Car>,
+    lanes: Vec<Lane>,
+}
+impl Traffic {
+    pub fn new() -> Traffic {
+        let vec1: Vec<Car> = Vec::new();
+        let vec2: Vec<Lane> = Vec::new();
+        Traffic {
+            cars: vec1,
+            lanes: vec2,
+        }
+    }
+    pub fn add_car(&mut self, car: Car) {
+        self.cars.push(car);
+    }
+    pub fn add_lane(&mut self, lane: Lane) {
+        self.lanes.push(lane);
+    }
+    pub fn display<G>(&self, c: Context, g: &mut G)
+    where
+        G: Graphics,
+    {
+        for lane in &self.lanes {
+            lane.display(c, g, 2.0); // buggy when less than 2.0
+        }
+        for car in &self.cars {
+            car.display(c, g);
+        }
+    }
+    pub fn step(&mut self) {}
 }
 
 pub struct RunTime {
